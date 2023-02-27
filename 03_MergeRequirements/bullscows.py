@@ -3,6 +3,7 @@ from collections import Counter
 from random import choice
 from urllib.request import urlopen
 from os.path import isfile
+from cowsay import cowsay, list_cows
 
 
 def bullscows(guess: str, secret: str) -> (int, int):
@@ -26,17 +27,24 @@ def gameplay(ask: callable, inform: callable, words: list[str]) -> int:
 	return numberOfAttempts
 
 
+def getRandomCow() -> str:
+	return choice(list_cows())
+
+
 def ask(prompt: str, valid: list[str] = None) -> str:
-	guess = input(prompt)
+	message = cowsay(prompt, cow=getRandomCow()) + '\n'
+	guess = input(message)
 
 	while valid and guess not in valid:
-		guess = input(prompt)
+		message = cowsay(prompt, cow=getRandomCow()) + '\n'
+		guess = input(message)
 
-	return guess
+	return guess if guess else input(message)
 
 
 def inform(format_string: str, bulls: int, cows: int) -> None:
-	print(format_string.format(bulls, cows))
+	message = cowsay(format_string.format(bulls, cows), cow=getRandomCow()) + '\n'
+	print(message)
 
 
 def getDict(dictionary: str, wordLength: int) -> list[str]:
@@ -58,6 +66,10 @@ match sys.argv:
 			words = getDict(dictionary, wordLength)
 		except:
 			print('Invalid dictionary')
+			exit()
+
+		if not words:
+			print('Dictionary doesn\'t contain words of such length')
 			exit()
 
 		numberOfAttempts = gameplay(ask, inform, words)
