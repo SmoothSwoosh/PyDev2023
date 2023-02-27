@@ -32,11 +32,11 @@ def getRandomCow() -> str:
 
 
 def ask(prompt: str, valid: list[str] = None) -> str:
-	message = cowsay(prompt, cow=getRandomCow()) + '\n'
+	message = cowsay(prompt, cowfile=cowfile) + '\n'
 	guess = input(message)
 
 	while valid and guess not in valid:
-		message = cowsay(prompt, cow=getRandomCow()) + '\n'
+		message = cowsay(prompt, cowfile=cowfile) + '\n'
 		guess = input(message)
 
 	return guess if guess else input(message)
@@ -57,6 +57,10 @@ def getDict(dictionary: str, wordLength: int) -> list[str]:
 
 	return [word for word in allWords if len(word) == wordLength]
 
+
+COW_PATH = 'cow.file'
+with open(COW_PATH, 'r') as f:
+	cowfile = f.read()
 
 match sys.argv:
 	case [prog, dictionary, *wordLength]:
