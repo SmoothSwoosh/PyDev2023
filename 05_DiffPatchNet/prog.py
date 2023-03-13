@@ -10,8 +10,9 @@ clients = {}
 pending_clients = {}
 
 
-async def write_message(writer, message):
-	message += '\n'
+async def write_message(writer, message, ID):
+	cow = 'default' if ID in pending_clients.keys() else ID
+	message = cowsay.cowsay(message, cow=cow) + '\n'
 	writer.write(message.encode())
 	await writer.drain()
 
@@ -37,13 +38,13 @@ async def client(reader, writer):
 						case ['who']:
 							if clients:
 								await write_message(writer, 'Registered clients: ' + 
-									', '.join(clients.keys()))
+									', '.join(clients.keys()), ID)
 							else:
-								await write_message(writer, 'No registered clients')
+								await write_message(writer, 'No registered clients', ID)
 						case ['cows']:
 							available_cows = set(cowsay.list_cows()) - clients.keys()
 							await write_message(writer, 'Available cow names: ' +
-									', '.join(available_cows))
+									', '.join(available_cows), ID)
 						case ['login', name]:
 							available_cows = set(cowsay.list_cows()) - clients.keys()
 							if name in available_cows:
@@ -52,14 +53,14 @@ async def client(reader, writer):
 								ID = name
 								clients[ID] = asyncio.Queue()
 								receive = asyncio.create_task(clients[ID].get())
-								await write_message(writer, f'You are successfully registered as {ID}')
+								await write_message(writer, f'You are successfully registered as {ID}', ID)
 							else:
-								await write_message(writer, 'This name is not available')
+								await write_message(writer, 'This name is not available', ID)
 						case ['quit']:
 							connected = False
-							await write_message(writer, 'You successfully exited')
+							await write_message(writer, 'You successfully exited', ID)
 						case _:
-							await write_message(writer, 'Wrong command')
+							await write_message(writer, 'Wrong command', ID)
 
 				else:
 					#client is registered
@@ -67,16 +68,16 @@ async def client(reader, writer):
 						case ['who']:
 							if clients:
 								await write_message(writer, 'Registered clients: ' + 
-									', '.join(clients.keys()))
+									', '.join(clients.keys()), ID)
 							else:
-								await write_message(writer, 'No registered clients')
+								await write_message(writer, 'No registered clients', ID)
 						case ['cows']:
 							available_cows = set(cowsay.list_cows()) - clients.keys()
 							await write_message(writer, 'Available cow names: ' +
-									', '.join(available_cows))
+									', '.join(available_cows), ID)
 						case ['say', name, text]:
 							if name not in clients.keys():
-								await write_message(writer, f'No registered client with name {name}')
+								await write_message(writer, f'No registered client with name {name}', ID)
 							else:
 								await clients[name].put(text.encode())
 						case ['yield', text]:
@@ -85,13 +86,13 @@ async def client(reader, writer):
 									await out.put(text.encode())
 						case ['quit']:
 							connected = False
-							await write_message(writer, 'You successfully exited')
+							await write_message(writer, 'You successfully exited', ID)
 						case _:
-							await write_message(writer, 'Wrong command')
+							await write_message(writer, 'Wrong command', ID)
 
 			elif task is receive:
 				receive = asyncio.create_task(clients[ID].get())
-				await write_message(writer, message)
+				await write_message(writer, message, ID)
 
 	send.cancel()
 	receive.cancel()
